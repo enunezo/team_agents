@@ -11,15 +11,19 @@ from functions.sprint_metrics import (
     get_bug_status
 )
 
+from agents.qa_engineer import qa_engineer
+
 # Import other agents to redirect queries
 from agents.developer import developer as dev_agent
 from agents.qa_engineer import qa_engineer as qa_agent
 from agents.product_owner import product_owner as po_agent
 
+import asyncio
+
 # Functions for meetings
-def facilitate_daily_meeting():
-    team = ["Alice (Dev)", "Bob (QA)", "Charlie (PM)"]
-    return daily_meeting(team)
+#def facilitate_daily_meeting():
+#    team = ["Alice (Dev)", "Bob (QA)", "Charlie (PM)"]
+#    return daily_meeting(team)
 
 def facilitate_sprint_planning():
     return sprint_planning()
@@ -31,6 +35,40 @@ def facilitate_sprint_review():
 def facilitate_sprint_retro():
     feedback = ["Improve code reviews", "Reduce scope creep", "Better sprint estimates"]
     return sprint_retro(feedback)
+
+
+
+async def share_daily_update():
+    """Simulates sharing a daily update."""
+    await asyncio.sleep(1)  # Simulate some processing delay
+    return "Today's update is complete!"
+
+async def facilitate_daily_meeting():
+    """Facilitates the daily standup asynchronously."""
+    print("📢 Scrum Master: Let's start the daily standup!\n")
+
+    agents = [po_agent, dev_agent, qa_agent]  # List of agents to call
+    responses = []
+    function_name = "share_daily_update"
+    # Dynamically invoke the function for each agent
+    for agent in agents:
+        for func in agent.functions:
+            print(f"Checking function: {func.__name__}")
+            if func.__name__ == function_name:
+                response = func()  # Call the function dynamically
+                responses.append(response)
+            else:
+                responses.append(f"{agent.name} didn't come today.")
+    # Print out the responses for each agent
+    agent_names = ["📊 Product Owner", "👨‍💻 Developer", "🧪 QA Engineer"]
+    for name, response in zip(agent_names, responses):
+        print(f"{name}: {response}")
+    print("\n📢 Scrum Master: Thank you all for your updates!\n"    )
+    return "✅ Daily Standup Complete!"
+
+
+def facilitate_daily_meeting_sync():
+    return asyncio.run(facilitate_daily_meeting())  # Runs the async function properly
 
 # Sprint status and metrics
 def fetch_sprint_status():
@@ -93,16 +131,19 @@ def redirect_query(query_type: str):
 # Define the Scrum Master agent
 scrum_master = Agent(
     name="ScrumMaster",
-    instructions="You are a Scrum Master. Get sprint status, impediments, and coordinate meetings.",
-    functions=[
-        fetch_sprint_status,
-        fetch_impediments,
-        facilitate_daily_meeting,
-        facilitate_sprint_planning,
-        facilitate_sprint_review,
-        facilitate_sprint_retro,
-        redirect_query
-    ]
+    #instructions="You are a Scrum Master. Get sprint status, impediments, and coordinate meetings.",
+    #functions=[
+    #    fetch_sprint_status,
+    #    fetch_impediments,
+    #    facilitate_daily_meeting,
+    #    facilitate_sprint_planning,
+    #    facilitate_sprint_review,
+    #    facilitate_sprint_retro,
+    #    redirect_query
+    #]
+    instructions="You facilitate daily standups and coordinate the team.",
+    functions=[facilitate_daily_meeting_sync]
+
 )
 
 if __name__ == "__main__":
